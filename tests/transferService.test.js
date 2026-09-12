@@ -10,6 +10,14 @@ test('transfers multiple accessories in one new look', () => {
   const result = build({ sourceAttachments: [watch, hat] });
   assert.deepEqual(result.metadata.attachments, [watch, hat]);
 });
+test('keeps separate transforms for repeated accessories with the same partId', () => {
+  const first = { ...source(), position: [1, 2, 3], scale: [1, 1, 1] };
+  const second = { ...source(), position: [4, 5, 6], scale: [2, 2, 2] };
+  const third = { ...source(), position: [7, 8, 9], scale: [3, 3, 3] };
+  const result = build({ sourceAttachments: [first, second, third], sourceKeys: ['0', '1', '2'], valuesBySourceKey: { 0: { position: first.position, scale: first.scale }, 1: { position: second.position, scale: second.scale }, 2: { position: third.position, scale: third.scale } } });
+  assert.deepEqual(result.metadata.attachments.map(a => a.position), [[1, 2, 3], [4, 5, 6], [7, 8, 9]]);
+  assert.deepEqual(result.metadata.attachments.map(a => a.scale), [[1, 1, 1], [2, 2, 2], [3, 3, 3]]);
+});
 test('target look avatar takes precedence and existing attachments survive', () => {
   const other = source('avp_hat');
   const result = build({ targetLook: target([other]), targetAvatarId: 'avtr_wrong' });

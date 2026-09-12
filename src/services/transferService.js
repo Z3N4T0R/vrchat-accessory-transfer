@@ -23,20 +23,21 @@ export function buildEditableAttachment({ sourceAttachment, baseAttachment, sele
   validateAttachment(result);
   return normalizeAttachment(result);
 }
-export function buildTransferredLook({ sourceAttachment, sourceAttachments, targetLook, targetAvatarId, newName, duplicateBehavior = 'replace', selectedFields, valuesByPartId = {} }) {
+export function buildTransferredLook({ sourceAttachment, sourceAttachments, targetLook, targetAvatarId, newName, duplicateBehavior = 'replace', selectedFields, valuesByPartId = {}, valuesBySourceKey = {}, sourceKeys = [] }) {
   const selectedSources = sourceAttachments ?? [sourceAttachment];
   if (!Array.isArray(selectedSources) || !selectedSources.length) throw new Error('Select at least one accessory.');
   selectedSources.forEach(validateAttachment);
   if (!['replace', 'keep-both', 'cancel'].includes(duplicateBehavior)) throw new Error('Unknown duplicate behavior.');
   const avatarId = targetLook ? targetLook.metadata.avatarId : targetAvatarId;
-  let attachments = targetLook ? targetLook.metadata.attachments.map(normalizeAttachment) : [];
-  for (const source of selectedSources) {
-    const existing = attachments.find(a => a.partId === source.partId);
-    if (existing) {
-      if (duplicateBehavior === 'cancel') throw new Error('Transfer cancelled: at least one accessory already exists in the target.');
-      if (duplicateBehavior === 'replace') attachments = attachments.filter(a => a.partId !== source.partId);
-    }
-    attachments.push(buildEditableAttachment({ sourceAttachment: source, baseAttachment: existing, selectedFields, values: valuesByPartId[source.partId] }));
+  const targetAttachments = targetLook ? targetLook.metadata.attachments.map(normalizeAttachment) : [];
+  const selectedPartIds = new Set(selectedSources.map(source => source.partId));
+  const targetDuplicates = targetAttachments.filter(target => selectedPartIds.has(target.partId));
+  if (targetDuplicates.length && duplicateBehavior === 'cancel') throw new Error('Transfer cancelled: at least one accessory already exists in the target.');
+  let attachments = duplicateBehavior === 'replace' ? targetAttachments.filter(target => !selectedPartIds.has(target.partId)) : [...targetAttachments];
+  for (const [index, source] of selectedSources.entries()) {
+    const existing = targetDuplicates.find(a => a.partId === source.partId);
+    const sourceKey = sourceKeys[index];
+    attachments.push(buildEditableAttachment({ sourceAttachment: source, baseAttachment: existing, selectedFields, values: valuesBySourceKey[sourceKey] ?? valuesByPartId[source.partId] }));
   }
   return validatePayload({ name: typeof newName === 'string' ? newName.trim() : newName, metadata: { avatarId, attachments } });
 }

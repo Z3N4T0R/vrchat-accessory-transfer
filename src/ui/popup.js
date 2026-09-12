@@ -22,7 +22,8 @@ function options(id, entries) {
 const findLook = id => looks.find(look => look.id === $(id).value);
 const findAvatarById = id => avatars.find(avatar => avatar.id === id);
 const findAvatar = id => findAvatarById($(id).value);
-const sourceAttachments = () => [...document.querySelectorAll('[name="accessory"]:checked')].map(input => findLook('sourceLook')?.metadata.attachments[Number(input.value)]).filter(Boolean);
+const sourceSelection = () => [...document.querySelectorAll('[name="accessory"]:checked')].map(input => ({ key: input.value, attachment: findLook('sourceLook')?.metadata.attachments[Number(input.value)] })).filter(entry => entry.attachment);
+const sourceAttachments = () => sourceSelection().map(entry => entry.attachment);
 const selectedFields = () => Object.entries(fieldIds).filter(([, id]) => $(id).checked).map(([field]) => field);
 
 function updateAvatarPreview(avatar, imageId, nameId) {
@@ -32,18 +33,18 @@ function updateAvatarPreview(avatar, imageId, nameId) {
   if (imageUrl) $(imageId).src = imageUrl;
   $(imageId).alt = avatar ? `${avatar.name} preview` : '';
 }
-function numberInput(partId, field, index, value) {
+function numberInput(sourceKey, field, index, value) {
   const input = document.createElement('input');
   input.type = 'number'; input.step = 'any'; input.value = String(value);
   input.disabled = !$(fieldIds[field]).checked;
-  input.dataset.partId = partId; input.dataset.field = field; input.dataset.index = String(index);
+  input.dataset.sourceKey = sourceKey; input.dataset.field = field; input.dataset.index = String(index);
   input.setAttribute('aria-label', `${field} ${index + 1}`);
   return input;
 }
 function renderEditor() {
-  const selected = sourceAttachments();
+  const selected = sourceSelection();
   $('review').disabled = !selected.length;
-  $('editor').replaceChildren(...selected.map((attachment, index) => {
+  $('editor').replaceChildren(...selected.map(({ key, attachment }, index) => {
     const section = document.createElement('section');
     section.className = 'editBlock';
     const heading = document.createElement('div');
@@ -60,7 +61,7 @@ function renderEditor() {
     const pathInput = document.createElement('input');
     pathInput.value = attachment.path ?? '';
     pathInput.disabled = !$('copyPath').checked;
-    pathInput.dataset.partId = attachment.partId; pathInput.dataset.field = 'path';
+    pathInput.dataset.sourceKey = key; pathInput.dataset.field = 'path';
     path.append(pathInput);
     section.append(heading, path);
     for (const field of ['position', 'rotation', 'scale']) {
@@ -68,7 +69,7 @@ function renderEditor() {
       row.className = `vector vector${attachment[field].length}`;
       const label = document.createElement('span');
       label.textContent = field;
-      row.append(label, ...attachment[field].map((value, i) => numberInput(attachment.partId, field, i, value)));
+      row.append(label, ...attachment[field].map((value, i) => numberInput(key, field, i, value)));
       section.append(row);
     }
     return section;
@@ -79,10 +80,10 @@ function editedValues() {
   const enabled = new Set(selectedFields());
   for (const input of $('editor').querySelectorAll('input')) {
     if (!enabled.has(input.dataset.field)) continue;
-    const part = values[input.dataset.partId] ??= {};
-    if (input.dataset.field === 'path') part.path = input.value;
+    const source = values[input.dataset.sourceKey] ??= {};
+    if (input.dataset.field === 'path') source.path = input.value;
     else {
-      const vector = part[input.dataset.field] ??= [];
+      const vector = source[input.dataset.field] ??= [];
       vector[Number(input.dataset.index)] = Number(input.value);
     }
   }
@@ -158,7 +159,8 @@ for (const id of Object.values(fieldIds)) $(id).addEventListener('change', rende
 $('form').addEventListener('submit', event => {
   event.preventDefault();
   try {
-    reviewed = buildTransferredLook({ sourceAttachments: sourceAttachments(), targetLook: findLook('targetLook'), targetAvatarId: $('targetAvatar').value, newName: $('name').value, duplicateBehavior: $('duplicate').value, selectedFields: selectedFields(), valuesByPartId: editedValues() });
+    const selection = sourceSelection();
+    reviewed = buildTransferredLook({ sourceAttachments: selection.map(entry => entry.attachment), sourceKeys: selection.map(entry => entry.key), targetLook: findLook('targetLook'), targetAvatarId: $('targetAvatar').value, newName: $('name').value, duplicateBehavior: $('duplicate').value, selectedFields: selectedFields(), valuesBySourceKey: editedValues() });
     $('payload').textContent = JSON.stringify(reviewed, null, 2);
     $('controls').disabled = true; $('confirmation').hidden = false; $('create').disabled = false;
     $('create').focus(); status('Review the exact payload, then create the new look.');
