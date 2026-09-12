@@ -1,10 +1,10 @@
 # VRChat Accessory Transfer
 
-VRChat Accessory Transfer is an unofficial Chrome and Microsoft Edge extension for copying accessory placements between VRChat Avatar Looks.
+VRChat Accessory Transfer is an unofficial Chrome and Microsoft Edge extension for copying accessory placements between different VRChat avatars.
 
-It helps you take one or more accessories from a saved look, copy their placement values, and create a new Avatar Look for another avatar or another saved look. Existing looks are left unchanged.
+VRChat does not currently offer a built-in way to copy accessory placement from one avatar to another. This tool lets you reuse placements from a saved Avatar Look, so you do not have to reposition the same accessories over and over when using the same avatar model across multiple uploads.
 
-This extension has been verified with a logged-in VRChat browser session.
+It copies one or more accessories from a saved look and creates a new Avatar Look for another avatar or another saved look. Existing looks are left unchanged.
 
 ## Features
 
