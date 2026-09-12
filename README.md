@@ -6,6 +6,10 @@ VRChat does not currently offer a built-in way to copy accessory placement from 
 
 It copies one or more accessories from a saved look and creates a new Avatar Look for another avatar or another saved look. Existing looks are left unchanged.
 
+![VRChat Accessory Transfer workflow](docs/images/transfer-workflow.png)
+
+![Review transfer screen](docs/images/review-transfer.png)
+
 ## Features
 
 - Copy one or more accessories from a saved Avatar Look
