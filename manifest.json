@@ -1,0 +1,11 @@
+{
+  "manifest_version": 3,
+  "name": "VRChat Accessory Transfer (Unofficial)",
+  "version": "0.1.0",
+  "description": "Copy accessory transforms into a new Avatar Look using your existing VRChat session. Unofficial community tool.",
+  "permissions": ["scripting"],
+  "host_permissions": ["https://vrchat.com/*"],
+  "background": { "service_worker": "src/background.js", "type": "module" },
+  "action": { "default_title": "Open VRChat Accessory Transfer" },
+  "content_security_policy": { "extension_pages": "script-src 'self'; object-src 'none'" }
+}

@@ -1,0 +1,18 @@
+<!doctype html>
+<html lang="en">
+<head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>VRChat Accessory Transfer</title><link rel="stylesheet" href="popup.css"></head>
+<body><main>
+<header><div><span class="eyebrow">UNOFFICIAL COMMUNITY TOOL</span><h1>VRChat Accessory Transfer</h1><p>Reuse placements. Create a new look.</p></div><a href="https://vrchat.com/home" target="_blank" rel="noreferrer">Open VRChat</a></header>
+<p class="disclaimer">Not affiliated with VRChat. Uses your existing browser session. No passwords, tokens, or telemetry collected.</p>
+<section class="session"><button id="load">Load Avatars and Looks</button><span id="account">Keep a logged-in vrchat.com tab open.</span></section>
+<p id="status" role="status" aria-live="polite">Ready to connect.</p>
+<form id="form"><fieldset id="controls" disabled><div class="columns">
+<section class="card"><span class="eyebrow">01 / SOURCE</span><h2>Copy from</h2><label>Look<select id="sourceLook"></select></label><div class="avatarPreview"><img id="sourcePreview" alt=""><span id="sourceAvatarName">No source look selected</span></div><h3>Accessories</h3><div id="accessories" class="accessoryList"></div></section>
+<section class="card"><span class="eyebrow">02 / TARGET</span><h2>Create for</h2><label>Avatar<select id="targetAvatar"></select></label><div class="avatarPreview"><img id="targetPreview" alt=""><span id="targetAvatarName">No avatar selected</span></div><label>Starting point<select id="targetLook"></select></label><h3>Existing accessories</h3><ul id="existing"></ul><p class="hint">The selected look stays unchanged. Its accessories are copied into a new look.</p></section>
+</div><p id="warning" class="warning" hidden>These are different avatar uploads. The numeric transform will be copied exactly, but visual placement may differ if the rigs, bone lengths, proportions, or orientations are different.</p>
+<section class="card"><h2>Transfer settings</h2><div class="fieldGrid"><label><input type="checkbox" id="copyPath" checked> Path</label><label><input type="checkbox" id="copyPosition" checked> Position</label><label><input type="checkbox" id="copyRotation" checked> Rotation</label><label><input type="checkbox" id="copyScale" checked> Scale</label></div><label>If an accessory already exists<select id="duplicate"><option value="replace">Replace existing accessory</option><option value="keep-both">Keep both</option><option value="cancel">Cancel transfer</option></select></label><label>New look name<input id="name" required placeholder="Outfit B + accessory copy" autocomplete="off"></label><div id="editor" class="editor"></div><button id="review" type="submit">Review transfer</button></section>
+</fieldset></form>
+<section id="confirmation" class="card" hidden><h2>Review the new look</h2><p>Creating adds one new Avatar Look to your account. Check the target avatar and exact values below.</p><pre id="payload"></pre><button id="create">Create new Avatar Look</button><button id="cancel" class="secondary">Back to editing</button></section>
+<details><summary>Local diagnostics</summary><p class="hint">This page only; operation names and HTTP statuses. Cleared when closed.</p><pre id="debug">No requests yet.</pre></details>
+<footer>Different uploads may place accessories differently. Unofficial API behavior may change.</footer>
+</main><script type="module" src="popup.js"></script></body></html>
