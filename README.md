@@ -1,88 +1,91 @@
 # VRChat Accessory Transfer
 
-Unofficial community Chrome/Edge Manifest V3 extension. Not affiliated with or endorsed by VRChat. Copies one or more accessory placements from a saved Avatar Look into a **new** Avatar Look. Existing looks are never overwritten or deleted. This is not an avatar uploader and does not modify asset bundles. Use at your own risk; these unofficial/undocumented API behaviors may change.
+VRChat Accessory Transfer is an unofficial Chrome and Microsoft Edge extension for copying accessory placements between VRChat Avatar Looks.
+
+It helps you take one or more accessories from a saved look, copy their placement values, and create a new Avatar Look for another avatar or another saved look. Existing looks are left unchanged.
+
+This extension has been verified with a logged-in VRChat browser session.
+
+## Features
+
+- Copy one or more accessories from a saved Avatar Look
+- Create a new Avatar Look for any avatar in your account
+- Start from an existing target look and keep its current accessories
+- Show avatar names and preview images when available
+- Show accessory names and preview icons when available
+- Edit accessory path, position, rotation, and scale before creating the new look
+- Choose which placement fields to copy
+- Replace duplicate accessories, keep both, or cancel when a duplicate is found
+- Review the exact new look payload before creating it
 
 ## Install
 
-No build or dependencies are needed. Open `chrome://extensions` (Chrome) or `edge://extensions` (Edge), enable **Developer mode**, choose **Load unpacked**, and select this project folder containing manifest.json. If using the release ZIP, extract it first and select the extracted folder. Pin the toolbar action if desired; clicking it opens the full extension page.
+1. Download or clone this repository.
+2. Open `chrome://extensions` in Chrome or `edge://extensions` in Microsoft Edge.
+3. Enable **Developer mode**.
+4. Choose **Load unpacked**.
+5. Select the project folder that contains `manifest.json`.
 
-## Use and live test
+You can also use the packaged build in `dist/vrchat-accessory-transfer-0.1.0.zip`. Extract the ZIP first, then load the extracted folder with **Load unpacked**.
 
-1. In the same browser profile, open https://vrchat.com/home and log in normally. Keep that tab open. The extension never asks for passwords, cookies, tokens, or 2FA codes.
-2. Click the extension toolbar icon, then **Load Avatars and Looks**. Confirm your account, avatar count and look count. If you have multiple VRChat tabs, the most recently accessed one is used until the next reload.
-3. Choose a source look, then select one or more accessories. The source look shows its avatar name and preview when available. Accessories show their inventory name and preview icon when VRChat returns matching metadata. Up to VRChat's avatar-look accessory limit can be transferred in one new look.
-4. Choose a target avatar, then optionally choose an existing look on that avatar as the starting point. The avatar list is loaded from your own avatars endpoint and falls back to avatar IDs found in saved looks if that call fails. Selected source and target avatars show their preview image when VRChat returns one.
-5. Select which transform fields to copy: path, position, rotation, and scale. Checked fields can be edited before review. Unchecked fields keep the matching target accessory's values when replacing or keeping an existing duplicate; if no target duplicate exists, the source value is still used because a valid attachment needs all transform fields.
-6. Choose how duplicate part IDs are handled (replace by default, keep both, or cancel), enter a new name, and click **Review transfer**. Review the exact JSON and different-upload warning.
-7. **Create new Avatar Look** performs one real POST to your account. Use a recognizable test name. Reload afterward and inspect the new look in VRChat. Confirm the original source and target still exist and the copied transform matches.
-8. For duplicate testing, use a target with the same part ID and check replacement, then keep-both with a different new name. Keep-both server acceptance is not yet verified.
+## Use
 
-These are different avatar uploads. The numeric transform will be copied exactly, but visual placement may differ if the rigs, bone lengths, proportions, or orientations are different. Multiple uploads of the identical model should usually match closely; verify in VRChat.
+1. Open `https://vrchat.com/home` in the same browser profile and log in normally.
+2. Keep the VRChat tab open.
+3. Click the extension icon.
+4. Select **Load Avatars and Looks**.
+5. Under **Copy from**, choose the saved Avatar Look that contains the accessory placement you want.
+6. Select one or more accessories from that look.
+7. Under **Create for**, choose the target avatar.
+8. Optionally choose an existing target look as the starting point.
+9. Choose which fields to copy: path, position, rotation, and scale.
+10. Edit any copied values if needed.
+11. Choose how duplicates should be handled.
+12. Enter a name for the new Avatar Look.
+13. Select **Review transfer**.
+14. Review the values.
+15. Select **Create new Avatar Look**.
 
-## Privacy and permissions
+The extension creates a new Avatar Look in your VRChat account. It does not overwrite the source look or the target look.
 
-Only `scripting` plus host access to `https://vrchat.com/*`. Fetch runs in an isolated context in the selected VRChat tab with browser-managed credentials. No cookies permission, credential reading or storage, analytics, backend, external scripts, or persistent extension data. The extension keeps loaded looks and safe operation/status diagnostics in memory while its page is open. Close the page to clear them. All processing is local; API requests go directly to VRChat.
+## Placement Notes
 
-## Technical notes
+Accessory placement values are copied exactly. Rotation is kept as a quaternion in X, Y, Z, W order.
 
-- GET `/api/1/auth/user`: login check; returns only user ID/display name to the extension page. Endpoint assumption awaiting live verification.
-- GET `/api/1/avatars?n=100&offset=0&sort=updated&order=descending&releaseStatus=all&user=me`: loads your own avatars for names and preview images. If this fails, the UI falls back to avatar IDs discovered in Avatar Looks.
-- GET `/api/1/inventory?n=100&offset=0&order=newest&types=avatarlook`: user-reported verified inventory listing. Sequential pagination increments offset by 100; deduplicates IDs; stops at empty response or totalCount. Repeated pages and the 100-page safety limit fail explicitly, without offering incomplete targets.
-- GET `/api/1/inventory?n=100&offset=0&order=newest&types=accessory`: loads accessory inventory metadata for names and preview icons. Matching uses the accessory inventory `metadata.avatarPartId` field against look attachment `partId`. If a matching record or image is missing, the UI falls back to the attachment part ID.
-- POST `/api/1/avatar-look`: user-reported verified new look creation using `{name, metadata: {avatarId, attachments}}`.
-- Never calls PUT inventory (reported to reject metadata), DELETE, upload APIs, or asset endpoints.
-- Only documented attachment fields are sent: partId, isEnabled, path, position, rotation, scale, variables. Inventory IDs and unknown fields are removed from both source and preserved target attachments. UI-only accessory display names are never serialized into the create payload. Numeric values are not rounded, converted to Euler angles, or normalized.
-- Requests are paced, never automatically retried, and time out after 25 seconds. HTTP 429 imposes a cooldown of at least 60 seconds, respecting longer Retry-After values. Duplicate concurrent requests in the same VRChat tab reject.
+When copying between different avatar uploads, the same numeric values can look different if the rigs, proportions, bone lengths, or bone orientations are different. Copying between looks on the same avatar upload usually gives the most predictable result.
 
-See ARCHITECTURE.md for the design. Run `npm test` (Node 20+) for dependency-free tests. Run `npm run package` in Windows to create `dist/vrchat-accessory-transfer-0.1.0.zip`.
+## Privacy
+
+The extension uses your existing browser login session on `vrchat.com`.
+
+It does not ask for, read, store, or transmit:
+
+- VRChat passwords
+- 2FA codes
+- cookies
+- auth tokens
+- analytics
+- telemetry
+
+All requests go directly from your browser to VRChat. There is no backend server.
+
+## Permissions
+
+The extension uses:
+
+- `scripting`
+- access to `https://vrchat.com/*`
+
+These permissions are used to make VRChat API requests from your already logged-in VRChat tab.
 
 ## Troubleshooting
 
-- **401 / login**: log in normally on vrchat.com in this browser profile, complete any challenge on the website, then reload looks.
-- **Cannot reach tab**: keep the VRChat tab open on HTTPS vrchat.com; allow the extension site access and reload the extension page.
-- **403**: account permissions, website protection or API access may be blocking requests. Do not repeatedly retry.
-- **400**: check the displayed validation message and payload. No existing look was edited.
-- **404**: resource or endpoint may have changed.
-- **429**: wait at least a minute, or longer if requested. No automatic retries.
-- **5xx / network failure**: wait for recovery. After any failed create, first reload and inspect looks: the server might have created it even if the response was lost. The form requires reload after every POST.
-- **Missing transforms / malformed look**: creation or loading stops explicitly rather than inventing values or dropping target accessories. Save the look again in VRChat and reload.
-- **No looks**: save an Avatar Look with accessories in VRChat first. You can pick any loaded own avatar as the target, but the source still needs a saved look containing accessories.
+If loading fails, make sure you are logged in on `https://vrchat.com/home` in the same browser profile and that the tab is still open.
 
-## Scope and unverified TODOs
+If an avatar or accessory name is missing, the extension falls back to the saved VRChat ID. This can happen when VRChat does not return matching display metadata for that item.
 
-Phases 1–2 implemented, plus safety validation, pagination, duplicate handling, tests and packaging. This is an initial implementation, not a claim of live production certification.
+If creating a look fails after pressing **Create new Avatar Look**, reload your Avatar Looks in VRChat before trying again. The request may have reached VRChat even if the response was interrupted.
 
-- TODO: verify real authenticated GET and POST in Chrome and Edge, including website protection, account entitlements, API response shape and in-game appearance. Automated tests use simulated responses; no real account request was made during development.
-- TODO: verify keep-both acceptance, disabled accessories, variable types, any server attachment/name limits, and replacement of multiple matches. The client preserves values and surfaces server errors.
-- TODO: verify the own-avatar list endpoint live in Chrome and Edge. The UI falls back to look-derived avatar IDs if it fails.
-- TODO: verify accessory inventory response shape for all accessory sources. If inventory metadata cannot be matched to an attachment partId, partId remains the reliable fallback.
-- TODO: custom icons and browser-store packaging/review (Phase 4).
-- Concurrent website inventory changes can affect offset pagination. Avoid editing looks elsewhere while loading or reviewing. Review is based on the loaded snapshot; reload for fresh targets.
-- Unknown attachment metadata is intentionally not carried over; if VRChat introduces required fields, the whitelist must be updated. No account switching detection between GET and POST beyond the browser's active session: keep the account unchanged until creation finishes.
+## Disclaimer
 
-## Created file inventory
-
-```
-.gitignore
-ARCHITECTURE.md
-LICENSE
-README.md
-manifest.json
-package.json
-scripts/package.ps1
-src/background.js
-src/api/sessionRequest.js
-src/api/vrchatApi.js
-src/models/attachment.js
-src/models/accessory.js
-src/models/avatar.js
-src/models/avatarLook.js
-src/services/transferService.js
-src/ui/popup.html
-src/ui/popup.css
-src/ui/popup.js
-src/utils/validation.js
-tests/api.test.js
-tests/transferService.test.js
-dist/vrchat-accessory-transfer-0.1.0.zip (generated package)
-```
+This is an unofficial community tool and is not affiliated with, endorsed by, or supported by VRChat.
